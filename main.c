@@ -34,9 +34,9 @@ void serverRun(int *state) {
 #endif
     }
 #ifdef MODE_DEBUG
-    dumpBuf(buf_in, sizeof buf_in);
+    acp_dumpBuf(buf_in, sizeof buf_in);
 #endif    
-    if (!crc_check(buf_in, sizeof buf_in)) {
+    if (!acp_crc_check(buf_in, sizeof buf_in)) {
 #ifdef MODE_DEBUG
         fputs("WARNING: serverRun: crc check failed\n", stderr);
 #endif
@@ -81,6 +81,7 @@ void initApp() {
     if (!readSettings()) {
         exit_nicely_e("initApp: failed to read settings\n");
     }
+        peer_client.sock_buf_size = sock_buf_size;
     if (!initPid(&pid_file, &proc_id, pid_path)) {
         exit_nicely_e("initApp: failed to initialize pid\n");
     }
