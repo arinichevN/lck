@@ -10,6 +10,8 @@ int readSettings() {
     }
 
     int n;
+    char s[LINE_SIZE];
+    fgets(s, LINE_SIZE, stream);
     n = fscanf(stream, "%d\t%255s\t%d\t", &sock_port, pid_path, &sock_buf_size);
     if (n != 3) {
         fclose(stream);
