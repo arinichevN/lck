@@ -38,6 +38,8 @@ int initLock(LockList *list) {
 #endif
         return 0;
     }
+    char s[LINE_SIZE];
+    fgets(s, LINE_SIZE, stream);
     int rnum = 0;
     while (1) {
         int n = 0, x1, x2;
@@ -64,6 +66,7 @@ int initLock(LockList *list) {
             fclose(stream);
             return 0;
         }
+        fgets(s, LINE_SIZE, stream);
         int done = 1;
         size_t i;
         FORL{
