@@ -11,10 +11,12 @@ DEBUG_PARAM="-Wall -pedantic"
 MODE_DEBUG=-DMODE_DEBUG
 MODE_FULL=-DMODE_FULL
 
-PLATFORM=-DPLATFORM_ANY
-#PLATFORM=-DPLATFORM_ALLWINNER_A20
-#PLATFORM=-DPLATFORM_ALLWINNER_H3
-#PLATFORM=-DPLATFORM_CORTEX_A5
+CPU=-DCPU_ANY
+#CPU=-DCPU_ALLWINNER_A20
+#CPU=-DCPU_ALLWINNER_H3
+
+PINOUT=-DPINOUT1
+#PINOUT=-DPINOUT2
 
 NONE=-DNONEANDNOTHING
 
@@ -52,14 +54,14 @@ function conf_autostart {
 }
 
 function build_lib {
-	gcc $1 $PLATFORM -c app.c -D_REENTRANT $DEBUG_PARAM -lpthread && \
-	gcc $1 $PLATFORM -c crc.c $DEBUG_PARAM
-	gcc $1 $PLATFORM -c gpio.c $DEBUG_PARAM && \
-	gcc $1 $PLATFORM -c timef.c $DEBUG_PARAM && \
-	gcc $1 $PLATFORM -c udp.c $DEBUG_PARAM && \
-	gcc $1 $PLATFORM -c util.c $DEBUG_PARAM && \
+	gcc $1 $CPU -c app.c -D_REENTRANT $DEBUG_PARAM -lpthread && \
+	gcc $1 $CPU -c crc.c $DEBUG_PARAM
+	gcc $1 $CPU $PINOUT -c gpio.c $DEBUG_PARAM && \
+	gcc $1 $CPU -c timef.c $DEBUG_PARAM && \
+	gcc $1 $CPU -c udp.c $DEBUG_PARAM && \
+	gcc $1 $CPU -c util.c $DEBUG_PARAM && \
 	cd acp && \
-	gcc $1 $PLATFORM -c main.c $DEBUG_PARAM && \
+	gcc $1 $CPU -c main.c $DEBUG_PARAM && \
 	cd ../ && \
 	echo "library: making archive..." && \
 	rm -f libpac.a
@@ -72,7 +74,7 @@ function build {
 	cd lib && \
 	build_lib $1 && \
 	cd ../ 
-	gcc -D_REENTRANT $1 $3 $PLATFORM main.c -o $2 $DEBUG_PARAM -lpthread -L./lib -lpac && echo "Application successfully compiled. Launch command: sudo ./"$2
+	gcc -D_REENTRANT $1 $3 $CPU main.c -o $2 $DEBUG_PARAM -lpthread -L./lib -lpac && echo "Application successfully compiled. Launch command: sudo ./"$2
 }
 
 function full {
