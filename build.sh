@@ -54,7 +54,7 @@ function conf_autostart {
 }
 
 function build_lib {
-	gcc $1 $CPU -c app.c -D_REENTRANT $DEBUG_PARAM -lpthread && \
+	gcc -lpthread $1 -c app.c -D_REENTRANT $DEBUG_PARAM && \
 	gcc $1 $CPU -c crc.c $DEBUG_PARAM
 	gcc $1 $CPU $PINOUT -c gpio.c $DEBUG_PARAM && \
 	gcc $1 $CPU -c timef.c $DEBUG_PARAM && \
@@ -74,7 +74,7 @@ function build {
 	cd lib && \
 	build_lib $1 && \
 	cd ../ 
-	gcc -D_REENTRANT $1 $3 $CPU main.c -o $2 $DEBUG_PARAM -lpthread -L./lib -lpac && echo "Application successfully compiled. Launch command: sudo ./"$2
+	gcc -D_REENTRANT $1 $3 $CPU main.c -o $2 $DEBUG_PARAM -L./lib -lpac -lpthread && echo "Application successfully compiled. Launch command: sudo ./"$2
 }
 
 function full {

@@ -50,84 +50,51 @@ void lockOpen(const LockList *list) {
     locked = 0;
 }
 
-int bufCatData(int locked, char *buf, size_t buf_size) {
-    char q[LINE_SIZE];
-    snprintf(q, sizeof q, "%d" ACP_DELIMITER_ROW_STR, locked);
-    if (bufCat(buf, q, buf_size) == NULL) {
-        return 0;
-    }
-    return 1;
-}
-
-int sendStrPack(char qnf, char *cmd) {
-    extern Peer peer_client;
-    return acp_sendStrPack(qnf, cmd, &peer_client);
-}
-
-int sendBufPack(char *buf, char qnf, char *cmd_str) {
-    extern Peer peer_client;
-    return acp_sendBufPack(buf, qnf, cmd_str, &peer_client);
-}
-
-void sendStr(const char *s, uint8_t *crc) {
-    acp_sendStr(s, crc, &peer_client);
-}
-
-void sendFooter(int8_t crc) {
-    acp_sendFooter(crc, &peer_client);
-}
-
-void printData(LockList *list) {
+void printData(ACPResponse *response) {
+    LockList *list=&lock_list;
     int i = 0;
     char q[LINE_SIZE];
-    uint8_t crc = 0;
     snprintf(q, sizeof q, "pid_path: %s\n", pid_path);
-    sendStr(q, &crc);
+    SEND_STR(q)
     snprintf(q, sizeof q, "app_state: %s\n", getAppState(app_state));
-    sendStr(q, &crc);
+    SEND_STR(q)
     snprintf(q, sizeof q, "PID: %d\n", proc_id);
-    sendStr(q, &crc);
+    SEND_STR(q)
     snprintf(q, sizeof q, "port: %d\n", sock_port);
-    sendStr(q, &crc);
-    snprintf(q, sizeof q, "sock_buf_size: %d\n", sock_buf_size);
-    sendStr(q, &crc);
+    SEND_STR(q)
     snprintf(q, sizeof q, "locked: %d\n", locked);
-    sendStr(q, &crc);
-    sendStr("+-----------------------+\n", &crc);
-    sendStr("|        device         |\n", &crc);
-    sendStr("+-----------+-----------+\n", &crc);
-    sendStr("|    pin    |   value   |\n", &crc);
-    sendStr("+-----------+-----------+\n", &crc);
+    SEND_STR(q)
+    SEND_STR("+-----------------------+\n")
+    SEND_STR("|        device         |\n")
+    SEND_STR("+-----------+-----------+\n")
+    SEND_STR("|    pin    |   value   |\n")
+    SEND_STR("+-----------+-----------+\n")
     FORL{
         snprintf(q, sizeof q, "|%11d|%11d|\n",
         LIi.pin,
         LIi.value
         );
-        sendStr(q, &crc);
+        SEND_STR(q)
     }
-    sendStr("+-----------+-----------+\n", &crc);
-
-    sendFooter(crc);
+    SEND_STR_L("+-----------+-----------+\n")
 }
 
-void printHelp() {
+void printHelp(ACPResponse *response) {
     char q[LINE_SIZE];
-    uint8_t crc = 0;
-    sendStr("COMMAND LIST\n", &crc);
-    snprintf(q, sizeof q, "%c\tterminate process\n", ACP_CMD_APP_EXIT);
-    sendStr(q, &crc);
-    snprintf(q, sizeof q, "%c\tget state of process; response: B - process is in active mode, I - process is in standby mode\n", ACP_CMD_APP_PING);
-    sendStr(q, &crc);
-    snprintf(q, sizeof q, "%c\tget some variable's values; response will be packed into multiple packets\n", ACP_CMD_APP_PRINT);
-    sendStr(q, &crc);
-    snprintf(q, sizeof q, "%c\tget this help; response will be packed into multiple packets\n", ACP_CMD_APP_HELP);
-    sendStr(q, &crc);
+    SEND_STR("COMMAND LIST\n")
+    snprintf(q, sizeof q, "%s\tterminate process\n", ACP_CMD_APP_EXIT);
+    SEND_STR(q)
+    snprintf(q, sizeof q, "%s\tget state of process; response: B - process is in active mode, I - process is in standby mode\n", ACP_CMD_APP_PING);
+    SEND_STR(q)
+    snprintf(q, sizeof q, "%s\tget some variable's values; response will be packed into multiple packets\n", ACP_CMD_APP_PRINT);
+    SEND_STR(q)
+    snprintf(q, sizeof q, "%s\tget this help; response will be packed into multiple packets\n", ACP_CMD_APP_HELP);
+    SEND_STR(q)
 
-    snprintf(q, sizeof q, "%c\tlock\n", ACP_CMD_LCK_LOCK);
-    sendStr(q, &crc);
-    snprintf(q, sizeof q, "%c\tunlock\n", ACP_CMD_LCK_UNLOCK);
-    sendStr(q, &crc);
-    snprintf(q, sizeof q, "%c\tresponse: 1-locked, 0-unlocked\n", ACP_CMD_LCK_GET_DATA);
-    sendStr(q, &crc);
-    sendFooter(crc);
+    snprintf(q, sizeof q, "%s\tlock\n", ACP_CMD_LCK_LOCK);
+    SEND_STR(q)
+    snprintf(q, sizeof q, "%s\tunlock\n", ACP_CMD_LCK_UNLOCK);
+    SEND_STR(q)
+    snprintf(q, sizeof q, "%s\tresponse: 1-locked, 0-unlocked\n", ACP_CMD_GET_DATA);
+    SEND_STR_L(q)
 }

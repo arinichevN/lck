@@ -1,2 +1,2 @@
-port	PID_path	socket_buffer_size
-49175	/var/run/lck.pid	508
+port	PID_path
+49175	/var/run/lck.pid
