@@ -31,7 +31,7 @@ typedef struct {
     int value;
 } Lock;
 
-DEF_LIST(Lock)
+DEC_LIST(Lock)
 
 extern void serverRun(int *state) ;
 

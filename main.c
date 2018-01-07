@@ -1,7 +1,3 @@
-/*
- * lck
- */
-
 #include "main.h"
 
 char pid_path[LINE_SIZE];
@@ -56,16 +52,16 @@ void initApp() {
     if (!initServer(&sock_fd, sock_port)) {
         exit_nicely_e("initApp: failed to initialize udp server\n");
     }
+    if (!gpioSetup()) {
+        exit_nicely_e("initApp: failed to initialize GPIO\n");
+    }
     if (!initLock(&lock_list)) {
         exit_nicely_e("initApp: failed to initialize lock\n");
     }
     if (!checkLock(&lock_list)) {
         exit_nicely_e("initApp: failed to check lock\n");
     }
-    if (!gpioSetup()) {
-
-        exit_nicely_e("initApp: failed to initialize GPIO\n");
-    }
+    
     lockPrep(&lock_list);
 }
 
