@@ -4,23 +4,23 @@ int readSettings() {
     FILE* stream = fopen(CONFIG_FILE, "r");
     if (stream == NULL) {
 #ifdef MODE_DEBUG
-        perror("readSettings()");
+        fprintf(stderr, "%s()", F); perror("");
 #endif
         return 0;
     }
     skipLine(stream);
     int n;
-    n = fscanf(stream, "%d\t%255s\n", &sock_port, pid_path);
-    if (n != 2) {
+    n = fscanf(stream, "%d\n", &sock_port);
+    if (n != 1) {
         fclose(stream);
 #ifdef MODE_DEBUG
-        fputs("ERROR: readSettings: bad row format\n", stderr);
+        fprintf(stderr, "%s(): bad row format\n", F);
 #endif
         return 0;
     }
     fclose(stream);
 #ifdef MODE_DEBUG
-    printf("readSettings: \n\tsock_port: %d, \n\tpid_path: %s\n", sock_port, pid_path);
+    printf("%s(): \n\tsock_port: %d\n",F, sock_port);
 #endif
     return 1;
 }
@@ -32,7 +32,7 @@ int initLock(LockList *list) {
     FILE* stream = fopen(KEY_FILE, "r");
     if (stream == NULL) {
 #ifdef MODE_DEBUG
-        fputs("ERROR: initDevice: fopen", stderr);
+        fprintf(stderr, "%s()", F); perror("");
 #endif
         return 0;
     }
@@ -45,7 +45,7 @@ int initLock(LockList *list) {
             break;
         }
 #ifdef MODE_DEBUG
-        printf("initLock: count: pin = %d, value = %d\n", x1, x2);
+        printf("%s(): count: pin = %d, value = %d\n",F, x1, x2);
 #endif
         rnum++;
 
@@ -58,29 +58,28 @@ int initLock(LockList *list) {
         if (list->item == NULL) {
             list->length = 0;
 #ifdef MODE_DEBUG
-            fputs("ERROR: initLock: failed to allocate memory for pins\n", stderr);
+            fprintf(stderr,"%s(): failed to allocate memory\n", F);
 #endif
             fclose(stream);
             return 0;
         }
         skipLine(stream);
         int done = 1;
-        size_t i;
-        FORL{
+        FORLIST(i){
             int n;
             n = fscanf(stream, KEY_ROW_FORMAT, &LIi.pin, &LIi.value);
             if (n != KEY_FIELD_COUNT) {
                 done = 0;
             }
 #ifdef MODE_DEBUG
-            printf("initLock: read: pin = %d, value = %d\n", LIi.pin, LIi.value);
+            printf("%s(): read: pin = %d, value = %d\n",F, LIi.pin, LIi.value);
 #endif
         }
         if (!done) {
             FREE_LIST(list);
             fclose(stream);
 #ifdef MODE_DEBUG
-            fputs("ERROR: initLock: failure while reading rows\n", stderr);
+            fprintf(stderr,"%s(): failure while reading rows\n", F);
 #endif
             return 0;
         }

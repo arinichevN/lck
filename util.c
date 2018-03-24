@@ -1,14 +1,13 @@
 
 
 int checkLock(LockList *list) {
-    size_t i;
-    FORL{
+    FORLIST(i){
         if (!checkPin(LIi.pin)) {
-            fprintf(stderr, "ERROR: checkLock: bad pin where pin = %d\n", LIi.pin);
+            fprintf(stderr, "%s(): bad pin where pin = %d\n",F, LIi.pin);
             return 0;
         }
         if (!(LIi.value == 1 || LIi.value == 0)) {
-            fprintf(stderr, "ERROR: checkLock: bad value where pin = %d (1 or 0 expected)\n", LIi.pin);
+            fprintf(stderr, "%s(): bad value where pin = %d (1 or 0 expected)\n",F, LIi.pin);
             return 0;
         }
     }
@@ -17,8 +16,7 @@ int checkLock(LockList *list) {
 
 void lockClose(const LockList *list) {
     extern int locked;
-    size_t i;
-    FORL{
+    FORLIST(i){
         if (LIi.value) {
             pinHigh(LIi.pin);
         } else {
@@ -29,8 +27,7 @@ void lockClose(const LockList *list) {
 }
 
 void lockPrep(const LockList *list) {
-    size_t i;
-    FORL{
+    FORLIST(i){
         pinPUD(LIi.pin, PUD_OFF);
         pinModeOut(LIi.pin);
     }
@@ -39,8 +36,7 @@ void lockPrep(const LockList *list) {
 
 void lockOpen(const LockList *list) {
     extern int locked;
-    size_t i;
-    FORL{
+    FORLIST(i){
         if (LIi.value) {
             pinLow(LIi.pin);
         } else {
@@ -54,11 +50,9 @@ void printData(ACPResponse *response) {
     LockList *list=&lock_list;
     int i = 0;
     char q[LINE_SIZE];
-    snprintf(q, sizeof q, "pid_path: %s\n", pid_path);
-    SEND_STR(q)
     snprintf(q, sizeof q, "app_state: %s\n", getAppState(app_state));
     SEND_STR(q)
-    snprintf(q, sizeof q, "PID: %d\n", proc_id);
+    snprintf(q, sizeof q, "PID: %d\n", getpid());
     SEND_STR(q)
     snprintf(q, sizeof q, "port: %d\n", sock_port);
     SEND_STR(q)

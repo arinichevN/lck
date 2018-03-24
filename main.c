@@ -104,24 +104,18 @@ int main(int argc, char** argv) {
     setPriorityMax(SCHED_FIFO);
 #endif
     while (1) {
+#ifdef MODE_DEBUG
+        printf("%s(): %s\n",F, getAppState(app_state));
+#endif
         switch (app_state) {
             case APP_INIT:
-#ifdef MODE_DEBUG
-                puts("MAIN: init");
-#endif
                 initApp();
                 app_state = APP_RUN;
                 break;
             case APP_RUN:
-#ifdef MODE_DEBUG
-                puts("MAIN: run");
-#endif
                 serverRun(&app_state);
                 break;
             case APP_EXIT:
-#ifdef MODE_DEBUG
-                puts("MAIN: exit");
-#endif
                 exit_nicely();
                 break;
             default:
