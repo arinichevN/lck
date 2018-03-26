@@ -6,6 +6,7 @@
 #include "lib/gpio.h"
 #include "lib/timef.h"
 #include "lib/udp.h"
+#include "lib/tsv.h"
 
 #include "lib/acp/main.h"
 #include "lib/acp/app.h"
@@ -20,11 +21,11 @@
 #define CONF_DIR "/etc/controller/" APP_NAME_STR "/"
 #endif
 #ifndef MODE_FULL
-#define CONF_DIR "./"
+#define CONF_DIR "./config/"
 #endif
 
 #define KEY_FILE "" CONF_DIR "key.tsv"
-#define CONFIG_FILE "" CONF_DIR "config.tsv"
+#define CONFIG_FILE "" CONF_DIR "main.tsv"
 
 typedef struct {
     int pin;
@@ -44,4 +45,3 @@ extern void exit_nicely() ;
 extern void exit_nicely_e(char *s) ;
 
 #endif 
-

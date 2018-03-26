@@ -36,8 +36,8 @@ function move_bin_dbg {
 function move_conf {
 	([ -d $CONF_DIR ] || mkdir $CONF_DIR) && \
 	([ -d $CONF_DIR_APP ] || mkdir $CONF_DIR_APP) && \
-	cp  config.tsv $CONF_DIR_APP && \
-	cp  key.tsv $CONF_DIR_APP && \
+	cp  ./config/main.tsv $CONF_DIR_APP && \
+	cp  ./config/key.tsv $CONF_DIR_APP && \
 	echo "Your $APP configuration files are here: $CONF_DIR_APP";
 }
 
@@ -52,17 +52,18 @@ function conf_autostart {
 
 function build_lib {
 	gcc -lpthread $1 -c app.c -D_REENTRANT $DEBUG_PARAM && \
-	gcc $1 $CPU -c crc.c -D_REENTRANT $DEBUG_PARAM  -lpthread && \
+	gcc $1 -c crc.c -D_REENTRANT $DEBUG_PARAM  -lpthread && \
 	gcc $1 $CPU $PINOUT -c gpio.c -D_REENTRANT $DEBUG_PARAM -lpthread && \
-	gcc $1 $CPU -c timef.c -D_REENTRANT $DEBUG_PARAM -lpthread && \
-	gcc $1 $CPU -c udp.c -D_REENTRANT $DEBUG_PARAM -lpthread && \
-	gcc $1 $CPU -c util.c -D_REENTRANT $DEBUG_PARAM -lpthread && \
+	gcc $1 -c timef.c -D_REENTRANT $DEBUG_PARAM -lpthread && \
+	gcc $1 -c udp.c -D_REENTRANT $DEBUG_PARAM -lpthread && \
+	gcc $1 -c util.c -D_REENTRANT $DEBUG_PARAM -lpthread && \
+	gcc $1 -c tsv.c -D_REENTRANT $DEBUG_PARAM -lpthread && \
 	cd acp && \
-	gcc $1 $CPU -c main.c -D_REENTRANT $DEBUG_PARAM -lpthread && \
+	gcc $1 -c main.c -D_REENTRANT $DEBUG_PARAM -lpthread && \
 	cd ../ && \
 	echo "library: making archive..." && \
 	rm -f libpac.a
-	ar -crv libpac.a app.o crc.o gpio.o timef.o udp.o util.o acp/main.o && echo "library: done" && echo "hardware: $CPU $PINOUT"
+	ar -crv libpac.a app.o crc.o gpio.o timef.o udp.o util.o tsv.o acp/main.o && echo "library: done" && echo "hardware: $CPU $PINOUT"
 	rm -f *.o acp/*.o
 }
 #    1         2

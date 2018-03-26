@@ -1,7 +1,7 @@
 
 
 int checkLock(LockList *list) {
-    FORLIST(i){
+    FORLi{
         if (!checkPin(LIi.pin)) {
             fprintf(stderr, "%s(): bad pin where pin = %d\n",F, LIi.pin);
             return 0;
@@ -14,41 +14,36 @@ int checkLock(LockList *list) {
     return 1;
 }
 
-void lockClose(const LockList *list) {
-    extern int locked;
-    FORLIST(i){
+void lockClose(const LockList *list, int *locked) {
+    FORLi{
         if (LIi.value) {
             pinHigh(LIi.pin);
         } else {
             pinLow(LIi.pin);
         }
     }
-    locked = 1;
+    *locked = 1;
 }
 
 void lockPrep(const LockList *list) {
-    FORLIST(i){
+    FORLi{
         pinPUD(LIi.pin, PUD_OFF);
         pinModeOut(LIi.pin);
     }
-    lockClose(list);
 }
 
-void lockOpen(const LockList *list) {
-    extern int locked;
-    FORLIST(i){
+void lockOpen(const LockList *list, int *locked) {
+    FORLi{
         if (LIi.value) {
             pinLow(LIi.pin);
         } else {
             pinHigh(LIi.pin);
         }
     }
-    locked = 0;
+    *locked = 0;
 }
-
 void printData(ACPResponse *response) {
     LockList *list=&lock_list;
-    int i = 0;
     char q[LINE_SIZE];
     snprintf(q, sizeof q, "app_state: %s\n", getAppState(app_state));
     SEND_STR(q)
@@ -59,11 +54,11 @@ void printData(ACPResponse *response) {
     snprintf(q, sizeof q, "locked: %d\n", locked);
     SEND_STR(q)
     SEND_STR("+-----------------------+\n")
-    SEND_STR("|        device         |\n")
+    SEND_STR("|          key          |\n")
     SEND_STR("+-----------+-----------+\n")
     SEND_STR("|    pin    |   value   |\n")
     SEND_STR("+-----------+-----------+\n")
-    FORL{
+    FORLi{
         snprintf(q, sizeof q, "|%11d|%11d|\n",
         LIi.pin,
         LIi.value
@@ -84,7 +79,6 @@ void printHelp(ACPResponse *response) {
     SEND_STR(q)
     snprintf(q, sizeof q, "%s\tget this help; response will be packed into multiple packets\n", ACP_CMD_APP_HELP);
     SEND_STR(q)
-
     snprintf(q, sizeof q, "%s\tlock\n", ACP_CMD_LCK_LOCK);
     SEND_STR(q)
     snprintf(q, sizeof q, "%s\tunlock\n", ACP_CMD_LCK_UNLOCK);

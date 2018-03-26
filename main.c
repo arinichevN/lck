@@ -1,14 +1,12 @@
 #include "main.h"
 
-char pid_path[LINE_SIZE];
 int app_state = APP_INIT;
 int pid_file = -1;
-int proc_id = -1;
 int sock_port = -1;
 int sock_fd = -1; //udp socket file descriptor
 Peer peer_client = {.fd = &sock_fd, .addr_size = sizeof peer_client.addr};
 
-LockList lock_list = {NULL, 0};
+LockList lock_list = LIST_INITIALIZER;
 int locked = 1;
 
 #include "init_f.c"
@@ -29,10 +27,10 @@ void serverRun(int *state) {
         printHelp(&response);
         return;
     } else if (ACP_CMD_IS(ACP_CMD_LCK_LOCK)) {
-        lockClose(&lock_list);
+        lockClose(&lock_list, &locked);
         return;
     } else if (ACP_CMD_IS(ACP_CMD_LCK_UNLOCK)) {
-        lockOpen(&lock_list);
+        lockOpen(&lock_list, &locked);
         return;
     } else if (ACP_CMD_IS(ACP_CMD_GET_DATA)) {
         char q[LINE_SIZE];
@@ -43,11 +41,8 @@ void serverRun(int *state) {
 }
 
 void initApp() {
-    if (!readSettings()) {
+    if (!readSettings(&sock_port, CONFIG_FILE)) {
         exit_nicely_e("initApp: failed to read settings\n");
-    }
-    if (!initPid(&pid_file, &proc_id, pid_path)) {
-        exit_nicely_e("initApp: failed to initialize pid\n");
     }
     if (!initServer(&sock_fd, sock_port)) {
         exit_nicely_e("initApp: failed to initialize udp server\n");
@@ -55,21 +50,20 @@ void initApp() {
     if (!gpioSetup()) {
         exit_nicely_e("initApp: failed to initialize GPIO\n");
     }
-    if (!initLock(&lock_list)) {
+    if (!initLock(&lock_list,KEY_FILE)) {
         exit_nicely_e("initApp: failed to initialize lock\n");
     }
     if (!checkLock(&lock_list)) {
         exit_nicely_e("initApp: failed to check lock\n");
     }
-    
     lockPrep(&lock_list);
+    lockOpen(&lock_list, &locked);
 }
 
 void freeApp() {
-    lockClose(&lock_list);
+    lockClose(&lock_list, &locked);
     FREE_LIST(&lock_list);
     freeSocketFd(&sock_fd);
-    freePid(&pid_file, &proc_id, pid_path);
 }
 
 void exit_nicely() {
@@ -100,12 +94,9 @@ int main(int argc, char** argv) {
     if (mlockall(MCL_CURRENT | MCL_FUTURE) == -1) {
         perror("main: memory locking failed");
     }
-#ifndef MODE_DEBUG
-    setPriorityMax(SCHED_FIFO);
-#endif
     while (1) {
 #ifdef MODE_DEBUG
-        printf("%s(): %s\n",F, getAppState(app_state));
+        printf("%s(): %s\n", F, getAppState(app_state));
 #endif
         switch (app_state) {
             case APP_INIT:
