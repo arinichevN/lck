@@ -7,13 +7,14 @@ int sock_fd = -1; //udp socket file descriptor
 Peer peer_client = {.fd = &sock_fd, .addr_size = sizeof peer_client.addr};
 
 LockList lock_list = LIST_INITIALIZER;
-int locked = 1;
+FTS locked;
 
 #include "init_f.c"
 #include "util.c"
 
 void serverRun(int *state) {
     SERVER_HEADER
+    DEF_SERVER_I1LIST
     if (ACP_CMD_IS(ACP_CMD_APP_EXIT)) {
         *state = APP_EXIT;
         return;
@@ -34,8 +35,21 @@ void serverRun(int *state) {
         return;
     } else if (ACP_CMD_IS(ACP_CMD_GET_DATA)) {
         char q[LINE_SIZE];
-        snprintf(q, sizeof q, "%d" ACP_DELIMITER_ROW_STR, locked);
+        snprintf(q, sizeof q, "%.0f" ACP_DELIMITER_ROW_STR, locked.value);
         SEND_STR_L_P(q)
+        return;
+    } else if (ACP_CMD_IS(ACP_CMD_GET_FTS)) {
+        acp_requestDataToI1List(&request, &i1l);
+        if (i1l.length <= 0) {
+            return;
+        }
+        for (int i = 0; i < i1l.length; i++) {
+            int r = acp_responseFTSCat(i1l.item[i], locked.value, locked.tm, locked.state, &response);
+            if (!r) {
+                return;
+            }
+        }
+        acp_responseSend(&response, &peer_client);
         return;
     }
 }
@@ -50,13 +64,13 @@ void initApp() {
     if (!gpioSetup()) {
         exit_nicely_e("initApp: failed to initialize GPIO\n");
     }
-    if (!initLock(&lock_list,KEY_FILE)) {
+    if (!initLock(&lock_list, KEY_FILE)) {
         exit_nicely_e("initApp: failed to initialize lock\n");
     }
     if (!checkLock(&lock_list)) {
         exit_nicely_e("initApp: failed to check lock\n");
     }
-    lockPrep(&lock_list);
+    lockPrep(&lock_list, &locked);
     lockOpen(&lock_list, &locked);
 }
 

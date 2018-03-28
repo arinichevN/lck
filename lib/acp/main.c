@@ -1153,7 +1153,6 @@ int acp_sendCmdGetInt(Peer *peer, char* cmd, int *output) {
 }
 
 int acp_sendCmdGetFloat(Peer *peer, char* cmd, float *output) {
-
     peer->active = 0;
     peer->time1 = getCurrentTime();
     ACPRequest request;

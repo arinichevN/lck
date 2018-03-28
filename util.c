@@ -1,20 +1,21 @@
 
+#include <time.h>
 
 int checkLock(LockList *list) {
     FORLi{
         if (!checkPin(LIi.pin)) {
-            fprintf(stderr, "%s(): bad pin where pin = %d\n",F, LIi.pin);
+            fprintf(stderr, "%s(): bad pin where pin = %d\n", F, LIi.pin);
             return 0;
         }
         if (!(LIi.value == 1 || LIi.value == 0)) {
-            fprintf(stderr, "%s(): bad value where pin = %d (1 or 0 expected)\n",F, LIi.pin);
+            fprintf(stderr, "%s(): bad value where pin = %d (1 or 0 expected)\n", F, LIi.pin);
             return 0;
         }
     }
     return 1;
 }
 
-void lockClose(const LockList *list, int *locked) {
+void lockClose(const LockList *list, FTS *locked) {
     FORLi{
         if (LIi.value) {
             pinHigh(LIi.pin);
@@ -22,17 +23,22 @@ void lockClose(const LockList *list, int *locked) {
             pinLow(LIi.pin);
         }
     }
-    *locked = 1;
+    locked->value = POSITIVE_FLOAT;
+    locked->tm = getCurrentTime();
+    locked->state = GOOD_INT;
 }
 
-void lockPrep(const LockList *list) {
+void lockPrep(const LockList *list, FTS *locked) {
     FORLi{
         pinPUD(LIi.pin, PUD_OFF);
         pinModeOut(LIi.pin);
     }
+    locked->value = POSITIVE_FLOAT;
+    locked->tm = getCurrentTime();
+    locked->state = BAD_INT;
 }
 
-void lockOpen(const LockList *list, int *locked) {
+void lockOpen(const LockList *list, FTS *locked) {
     FORLi{
         if (LIi.value) {
             pinLow(LIi.pin);
@@ -40,10 +46,13 @@ void lockOpen(const LockList *list, int *locked) {
             pinHigh(LIi.pin);
         }
     }
-    *locked = 0;
+    locked->value = NEGATIVE_FLOAT;
+    locked->tm = getCurrentTime();
+    locked->state = GOOD_INT;
 }
+
 void printData(ACPResponse *response) {
-    LockList *list=&lock_list;
+    LockList *list = &lock_list;
     char q[LINE_SIZE];
     snprintf(q, sizeof q, "app_state: %s\n", getAppState(app_state));
     SEND_STR(q)
@@ -51,18 +60,19 @@ void printData(ACPResponse *response) {
     SEND_STR(q)
     snprintf(q, sizeof q, "port: %d\n", sock_port);
     SEND_STR(q)
-    snprintf(q, sizeof q, "locked: %d\n", locked);
+    snprintf(q, sizeof q, "locked: %.0f %ld %ld %d\n", locked.value, locked.tm.tv_sec, locked.tm.tv_sec, locked.state);
+
     SEND_STR(q)
     SEND_STR("+-----------------------+\n")
     SEND_STR("|          key          |\n")
     SEND_STR("+-----------+-----------+\n")
     SEND_STR("|    pin    |   value   |\n")
     SEND_STR("+-----------+-----------+\n")
-    FORLi{
+    FORLi {
         snprintf(q, sizeof q, "|%11d|%11d|\n",
-        LIi.pin,
-        LIi.value
-        );
+                LIi.pin,
+                LIi.value
+                );
         SEND_STR(q)
     }
     SEND_STR_L("+-----------+-----------+\n")
@@ -82,6 +92,8 @@ void printHelp(ACPResponse *response) {
     snprintf(q, sizeof q, "%s\tlock\n", ACP_CMD_LCK_LOCK);
     SEND_STR(q)
     snprintf(q, sizeof q, "%s\tunlock\n", ACP_CMD_LCK_UNLOCK);
+    SEND_STR(q)
+    snprintf(q, sizeof q, "%s\tget locked state; id does not matter\n", ACP_CMD_GET_FTS);
     SEND_STR(q)
     snprintf(q, sizeof q, "%s\tresponse: 1-locked, 0-unlocked\n", ACP_CMD_GET_DATA);
     SEND_STR_L(q)
